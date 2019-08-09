@@ -13,15 +13,16 @@ object MyModule {
     msg.format(x, abs(x))
   }
 
-  def main(args: Array[String]): Unit =
+  def main(args: Array[String]): Unit = {
     println(formatAbs(-42))
+  }
 
   // A definition of factorial, using a local, tail recursive function
   def factorial(n: Int): Int = {
     @annotation.tailrec
     def go(n: Int, acc: Int): Int =
       if (n <= 0) acc
-      else go(n-1, n*acc)
+      else go(n - 1, n * acc)
 
     go(n, 1)
   }
@@ -35,8 +36,18 @@ object MyModule {
   }
 
   // Exercise 1: Write a function to compute the nth fibonacci number
+  // f(0) = 0
+  // f(1) = 1
+  // f(n) = f(n - 1) + f(n - 2)
+  def fib(n: Int): Int = {
+    @annotation.tailrec
+    def go(fn_1: Int, fn_2: Int, i: Int): Int = {
+      if (i == n) fn_1
+      else go(fn_2, fn_1 + fn_2, i + 1)
+    }
 
-  def fib(n: Int): Int = ???
+    go(0, 1, 0)
+  }
 
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
@@ -86,7 +97,7 @@ object AnonymousFunctions {
     println(formatResult("absolute value", -42, abs))
     println(formatResult("factorial", 7, factorial))
     println(formatResult("increment", 7, (x: Int) => x + 1))
-    println(formatResult("increment2", 7, (x) => x + 1))
+    println(formatResult("increment2", 7, x => x + 1))
     println(formatResult("increment3", 7, x => x + 1))
     println(formatResult("increment4", 7, _ + 1))
     println(formatResult("increment5", 7, x => { val r = x + 1; r }))
@@ -107,7 +118,7 @@ object MonomorphicBinarySearch {
       else {
         val mid2 = (low + high) / 2
         val d = ds(mid2) // We index into an array using the same
-                         // syntax as function application
+        // syntax as function application
         if (d == key) mid2
         else if (d > key) go(low, mid2, mid2-1)
         else go(mid2 + 1, mid2, high)
@@ -140,11 +151,20 @@ object PolymorphicFunctions {
 
   // Exercise 2: Implement a polymorphic function to check whether
   // an `Array[A]` is sorted
-  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = ???
+  def isSorted[A](as: Array[A], gt: (A,A) => Boolean): Boolean = {
+    @annotation.tailrec
+    def go(i: Int): Boolean = {
+      if (i == as.length) true
+      else if (gt(as(i - 1), as(i))) false
+      else go(i + 1)
+    }
+
+    if (as.length < 2) true
+    else go(1)
+  }
 
   // Polymorphic functions are often so constrained by their type
   // that they only have one implementation! Here's an example:
-
   def partial1[A,B,C](a: A, f: (A,B) => C): B => C =
     (b: B) => f(a, b)
 
@@ -152,14 +172,22 @@ object PolymorphicFunctions {
 
   // Note that `=>` associates to the right, so we could
   // write the return type as `A => B => C`
-  def curry[A,B,C](f: (A, B) => C): A => (B => C) =
-    ???
+
+  // converts a function f of two arguments
+  // into a function of one argument that partially applies f
+
+  // You have to take an argument of type `A` and return a
+  // function of type `B => C`. That function has to take an argument of
+  // type `B` and return a value of type `C`. Follow the types.
+  def curry[A, B, C](f: (A, B) => C): A => B => C =
+    (a: A) => (b: B) => f(a, b)
 
   // NB: The `Function2` trait has a `curried` method already
 
   // Exercise 4: Implement `uncurry`
-  def uncurry[A,B,C](f: A => B => C): (A, B) => C =
-    ???
+  def uncurry[A, B, C](f: A => B => C): (A, B) => C =
+    (a: A, b: B) => f(a)(b)
+
 
   /*
   NB: There is a method on the `Function` object in the standard library,
@@ -173,6 +201,7 @@ object PolymorphicFunctions {
 
   // Exercise 5: Implement `compose`
 
-  def compose[A,B,C](f: B => C, g: A => B): A => C =
-    ???
+  def compose[A, B, C](f: B => C, g: A => B): A => C =
+    (a: A) => f(g(a))
+
 }
